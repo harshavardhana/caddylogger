@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package accesslog
+package caddylogger
 
 import (
 	"encoding/json"

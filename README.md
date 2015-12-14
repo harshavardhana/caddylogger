@@ -1,17 +1,17 @@
-# accesslog
-Access log is an experimental middleware which creates access logs in parsable json format.
+# caddylogger
+Caddy access logger is an experimental middleware which logs incoming HTTP requests in parsable json format.
 
 ### Quick Start
 `go get` this middleware
 
 ```shell
-$ go get github.com/minio/minio-caddy
+$ go get bitbucket.org/minimalists/caddylogger
 ```
 
 `cd` into the source directory
 
 ```shell
-$ cd $GOPATH/src/github.com/minio/minio-caddy
+$ cd $GOPATH/src/bitbucket.org/minimalists/caddylogger
 ```
 
 Run [caddydev](https://github.com/caddyserver/caddydev) to start Caddy with your new middleware.
@@ -36,15 +36,15 @@ $ tail access.log
 ```
 
 ### How did it happen ?
-By default, Caddy looks for [`Caddyfile`](https://caddyserver.com/docs/caddyfile) in the current directory and this repository contains a suitable one. **Note** new directive `accesslog`.
+By default, Caddy looks for [`Caddyfile`](https://caddyserver.com/docs/caddyfile) in the current directory and this repository contains a suitable one. **Note** new directive `caddylogger`.
 ```conf
 0.0.0.0
 
-accesslog
+caddylogger
 ```
 This repository also contains a [`config.json`](https://github.com/caddyserver/caddydev#1-configjson-file) file.
 ```
 {
-  "directive" : "accesslog"
+  "directive" : "caddylogger"
 }
 ```
