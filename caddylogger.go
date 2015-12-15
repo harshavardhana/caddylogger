@@ -30,17 +30,21 @@ import (
 
 // Setup access log handler middleware for caddy server.
 func Setup(c *setup.Controller) (middleware.Middleware, error) {
+	file, err := os.OpenFile("access.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		log.Fatalln("Unable to open access log.", err)
+	}
 	return func(next middleware.Handler) middleware.Handler {
-		file, err := os.OpenFile("access.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-		if err != nil {
-			log.Fatalln("Unable to open access log.", err)
+		return &caddyLoggerHandler{
+			LogFile: file,
+			Next:    next,
 		}
-		return &handler{logFile: file}
 	}, nil
 }
 
-type handler struct {
-	logFile *os.File
+type caddyLoggerHandler struct {
+	LogFile *os.File
+	Next    middleware.Handler
 }
 
 // LogMessage is a serializable json log message
@@ -70,30 +74,30 @@ type LogMessage struct {
 	}
 }
 
-func (h *handler) ServeHTTP(w http.ResponseWriter, req *http.Request) (int, error) {
-	message, err := getLogMessage(w, req)
+func (l *caddyLoggerHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) (int, error) {
+	message, err := prepareLogMessage(w, req)
 	if err != nil {
 		w.Write([]byte("Unable to extract http message. " + err.Error()))
 		return http.StatusInternalServerError, err
 	}
-	_, err = h.logFile.Write(message)
+	_, err = l.LogFile.Write(message)
 	if err != nil {
 		w.Write([]byte("Writing to log file failed. " + err.Error()))
 		return http.StatusInternalServerError, err
 	}
-	return 200, nil
+	return l.Next.ServeHTTP(w, req)
 }
 
-func getLogMessage(w http.ResponseWriter, req *http.Request) ([]byte, error) {
+func prepareLogMessage(w http.ResponseWriter, req *http.Request) ([]byte, error) {
 	logMessage := &LogMessage{
 		StartTime: time.Now().UTC(),
 	}
-	// store lower level details
+	// Store lower level details.
 	logMessage.HTTP.ResponseHeaders = w.Header()
 	logMessage.HTTP.Request = struct {
 		Method     string
 		URL        *url.URL
-		Proto      string // "HTTP/1.0"
+		Proto      string // HTTP/1.1
 		ProtoMajor int    // 1
 		ProtoMinor int    // 0
 		Header     http.Header

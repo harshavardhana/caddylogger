@@ -24,3 +24,5 @@ _testmain.go
 *.prof
 
 access.log
+caddy-logger
+caddy
